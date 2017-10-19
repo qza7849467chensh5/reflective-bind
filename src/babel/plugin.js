@@ -97,10 +97,8 @@ module.exports = function(opts) {
         // constantViolations are just assignments to the variable after the
         // initial binding. We want to hoist all potential arrow functions that
         // are assigned to the variable.
-        if (binding.constantViolations) {
-          for (let i = 0, n = binding.constantViolations.length; i < n; i++) {
-            processPath(binding.constantViolations[i]);
-          }
+        for (let i = 0, n = binding.constantViolations.length; i < n; i++) {
+          processPath(binding.constantViolations[i]);
         }
       } else {
         processPath(exprPath);
@@ -337,9 +335,10 @@ module.exports = function(opts) {
       }
       scope = scope.parent;
     }
-    // This case will be reached if limitScope is not an ancestor scope of the
-    // identifier and the identifier has no valid binding.
-    return false;
+    /* istanbul ignore next */
+    throw new Error(
+      "identifier has no valid binding and limitScope is not an ancestor scope"
+    );
   }
 
   // Returns true iff we are 100% sure the binding is executed before the path.
@@ -355,6 +354,7 @@ module.exports = function(opts) {
     const bscope = isBindingFnDeclaration
       ? binding.path.parentPath.scope
       : binding.path.scope;
+    /* istanbul ignore if */
     if (bscope !== path.scope && !isAncestorScope(bscope, path.scope)) {
       throw new Error(
         "binding's scope must be equal to or is an ancestor of the path's scope"
@@ -373,7 +373,9 @@ module.exports = function(opts) {
       // const a = () => a();
       // This means the binding is not created before the path is executed.
       return false;
-    } else if (bindingAncestorIdx < 0 || pathAncestorIdx <= 0) {
+    }
+    /* istanbul ignore if */
+    if (bindingAncestorIdx < 0 || pathAncestorIdx <= 0) {
       // This means that there is no common ancestor, or path is the ancestor
       // of binding. Neither case is valid for us.
       throw new Error(
@@ -385,6 +387,7 @@ module.exports = function(opts) {
     // one is executed first.
     const bindingRelationship = bindingAncestry[bindingAncestorIdx - 1];
     const pathRelationship = pathAncestry[pathAncestorIdx - 1];
+    /* istanbul ignore if */
     if (!bindingRelationship || !pathRelationship) {
       // This should never happen.
       throw new Error("Invalid binding or path relationship!");
@@ -393,6 +396,7 @@ module.exports = function(opts) {
     // If both relationshps are part of a container list, the key property
     // gives you the index in the container.
     if (bindingRelationship.listKey && pathRelationship.listKey) {
+      /* istanbul ignore if */
       if (bindingRelationship.container !== pathRelationship.container) {
         // This should never happen.
         throw new Error("Relationships not in the same container!");
@@ -413,12 +417,15 @@ module.exports = function(opts) {
     const pathPosition = visitorKeys.indexOf(
       pathRelationship.listKey || pathRelationship.key
     );
+    /* istanbul ignore if */
     if (bindingPosition < 0) {
       throw new Error(`Invalid bindingPosition ${bindingPosition}`);
     }
+    /* istanbul ignore if */
     if (pathPosition < 0) {
       throw new Error(`Invalid pathPosition ${pathPosition}`);
     }
+    /* istanbul ignore if */
     if (bindingPosition >= pathPosition) {
       throw new Error(
         "Binding does not occur before path in visitor key order!"
@@ -494,23 +501,24 @@ module.exports = function(opts) {
   }
 
   function nodesDefinitelyEqual(node1, node2) {
+    /* istanbul ignore else  */
     if (node1.type !== node2.type) {
       return false;
-    }
-    if (t.isThisExpression(node1)) {
+    } else if (t.isThisExpression(node1)) {
       return true;
-    }
-    if (t.isIdentifier(node1)) {
+    } else if (t.isIdentifier(node1)) {
       return node1.name === node2.name;
-    }
-    if (t.isMemberExpression(node1)) {
+    } else if (t.isMemberExpression(node1)) {
       return (
         node1.computed === node2.computed &&
         nodesDefinitelyEqual(node1.object, node2.object) &&
         nodesDefinitelyEqual(node1.property, node2.property)
       );
+    } else {
+      throw new Error(
+        `Equality comparison not supported for node type "${node1.type}"`
+      );
     }
-    return false;
   }
 
   function makeIdentifiers(names) {
@@ -556,6 +564,7 @@ module.exports = function(opts) {
   }
 
   function addToHoistPath(node) {
+    /* istanbul ignore else  */
     if (_hoistPath.node.body && _hoistPath.node.body.length) {
       node.leadingComments = _hoistPath.node.body[0].leadingComments;
       _hoistPath.node.body[0].leadingComments = undefined;
