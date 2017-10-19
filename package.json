@@ -53,6 +53,7 @@
   },
   "main": "./dist/index.js",
   "files": [
+    "babel",
     "dist"
   ]
 }

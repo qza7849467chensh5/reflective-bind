@@ -1,7 +1,6 @@
 // @flow
 
-import babelBind from "../../src/babel/babelBind";
-import {isReflective} from "../../src";
+import {babelBind, isReflective} from "../src";
 
 describe("babelBind", () => {
   it("calls reflective bind for normal functions", () => {

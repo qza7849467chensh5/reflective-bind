@@ -3,7 +3,7 @@
 exports[`reflective-bind babel transform alreadyImported.jsx 1`] = `
 "// @flow
 
-const _testBind2 = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind2 } from \\"../../src\\";
 
 function _testBBHoisted(a) {
   return a;
@@ -13,7 +13,7 @@ import * as React from \\"react\\";
 
 // Make sure import identifier doesn't conflict when transform adds the import.
 // The module path should be relative to the plugin-test.js file.
-import _testBind from \\"../../src/babel/babelBind\\";
+import { babelBind as _testBind } from \\"../../src\\";
 
 (function () {
   const hoistable = _testBind2(_testBBHoisted, this);
@@ -28,7 +28,7 @@ import _testBind from \\"../../src/babel/babelBind\\";
 exports[`reflective-bind babel transform alreadyRequired.jsx 1`] = `
 "// @flow
 
-const _testBind2 = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind2 } from \\"../../src\\";
 
 function _testBBHoisted(a) {
   return a;
@@ -38,7 +38,7 @@ import * as React from \\"react\\";
 
 // Make sure import identifier doesn't conflict when transform adds the import.
 // The module path should be relative to the plugin-test.js file.
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+const _testBind = require(\\"../../src\\").babelBind;
 
 (function () {
   const hoistable = _testBind2(_testBBHoisted, this);
@@ -53,7 +53,7 @@ const _testBind = require(\\"../../src/babel/babelBind\\").default;
 exports[`reflective-bind babel transform arrowBind.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, b, c) {
   return a + b + c;
@@ -74,7 +74,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowComputedProperty.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(prop, obj) {
   return obj.a[prop];
@@ -123,7 +123,7 @@ exports[`reflective-bind babel transform arrowContext.jsx 1`] = `
 exports[`reflective-bind babel transform arrowDeclareFnAfterFn.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(fn) {
   return fn;
@@ -162,7 +162,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowExpressionBody.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, b, c) {
   return a + b + c;
@@ -184,7 +184,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowInlineJsxContainerElement.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted2() {
   <div />;
@@ -206,7 +206,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowJsxIdentifier.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(Component) {
   <Component>
@@ -231,7 +231,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowJsxMemberExpression.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(Component) {
   <Component.Whatever>
@@ -256,7 +256,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowMemberExpression.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(obj) {
   return obj.a.b;
@@ -282,7 +282,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowNested.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, b) {
   let c = 3;
@@ -357,7 +357,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowRedeclareVar.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   let a = 2;
@@ -407,7 +407,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowRestSpread.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, ...rest) {
   return b => a + b + rest.reduce((tot, n) => tot + n, 0);
@@ -428,7 +428,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowSimple.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, c, d) {
   let b = 2;
@@ -452,7 +452,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform arrowStatelessComponentProps.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(props) {
   // Only \`props\` should be hoisted because we don't hoist deep attribute
@@ -473,7 +473,7 @@ function MyComponent(props: { nested: { callback: () => void } }) {
 exports[`reflective-bind babel transform arrowThis.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(outerScopeVar, arg) {
   // \`this\` should not be hoisted since we're not accessing any
@@ -524,7 +524,7 @@ import React from \\"react\\";
 exports[`reflective-bind babel transform arrowThisCallExpression.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(_temp, _temp2) {
   // The entire \`this.props.fn\` should be hoisted because we don't
@@ -566,7 +566,7 @@ import React from \\"react\\";
 exports[`reflective-bind babel transform arrowThisProps.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(outerScopeVar, _temp, _temp2, _temp3, arg) {
   // \`this\` should not be hoisted since we're not accessing any
@@ -633,7 +633,7 @@ import React from \\"react\\";
 exports[`reflective-bind babel transform arrowThisState.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(outerScopeVar, _temp, _temp2, _temp3, arg) {
   // \`this\` should not be hoisted since we're not accessing any
@@ -700,7 +700,7 @@ import React from \\"react\\";
 exports[`reflective-bind babel transform arrowTopLevel.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {}
 
@@ -715,7 +715,7 @@ const hoistable = _testBind(_testBBHoisted, this);
 exports[`reflective-bind babel transform arrowWithFlow.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a, c: C, d: D) {
   let b = 2;
@@ -742,8 +742,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform bindFlow.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
-
+import { babelBind as _testBind } from \\"../../src\\";
 import * as React from \\"react\\";
 
 (function () {
@@ -765,8 +764,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform bindInlineJsxContainerElement.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
-
+import { babelBind as _testBind } from \\"../../src\\";
 import * as React from \\"react\\";
 
 (function () {
@@ -780,8 +778,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform bindNonFunction.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
-
+import { babelBind as _testBind } from \\"../../src\\";
 import * as React from \\"react\\";
 
 (function () {
@@ -806,8 +803,7 @@ exports[`reflective-bind babel transform bindSimple.jsx 1`] = `
 "/* eslint-disable flowtype/require-valid-file-annotation */
 /* eslint-disable flowtype/require-parameter-type */
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
-
+import { babelBind as _testBind } from \\"../../src\\";
 import React from \\"react\\";
 
 (function () {
@@ -837,7 +833,7 @@ exports[`reflective-bind babel transform bindingNodeLocNPE.jsx 1`] = `
  * code's source location and using the AST instead.
  */
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(a) {
   let nonConst = 3;
@@ -864,7 +860,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform flowGenerics.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   let arr: Array<number> = [1, 2, 3];
@@ -887,7 +883,7 @@ exports[`reflective-bind babel transform flowObjMap.jsx 1`] = `
 "// @flow
 // https://flow.org/en/docs/types/utilities/#toc-objmap
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   // eslint-disable-next-line space-before-function-paren, no-unused-vars
@@ -935,7 +931,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform reassignIdentifier.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   return 1;
@@ -984,7 +980,7 @@ exports[`reflective-bind babel transform renameIdentifier.jsx 1`] = `
  * parameter is also renamed.
  */
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(w) {
   return w;
@@ -1021,7 +1017,7 @@ import * as React from \\"react\\";
 exports[`reflective-bind babel transform ternaryExpression.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   return 1;
@@ -1043,7 +1039,7 @@ function foo() {}
 exports[`reflective-bind babel transform ternaryExpressionInline.jsx 1`] = `
 "// @flow
 
-const _testBind = require(\\"../../src/babel/babelBind\\").default;
+import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted() {
   return 1;

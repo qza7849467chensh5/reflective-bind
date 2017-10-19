@@ -1,6 +1,3 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
-/* eslint-disable flowtype/require-parameter-type */
-
 /**
  * Replaces uses of Function.prototype.bind with reflective-bind and hoists
  * function expressions and arrow functions when possible to remove function
@@ -42,13 +39,12 @@ const SKIP_RE = /^\/\/ @no-reflective-bind-babel$/m;
 
 module.exports = function(opts) {
   const t = opts.types;
-  const template = opts.template;
 
   let _hoistedSlug;
   let _hoistPath;
   let _needImport = false;
   let _bableBindIdentifer;
-  let _babelBindModuleLiteral;
+  let _babelBindImportDeclaration;
 
   const rootVisitor = {
     // TODO: figure out how to not do the explicit recursive traversal.
@@ -58,9 +54,12 @@ module.exports = function(opts) {
       path,
       {
         opts: {
+          // Hoisted function name prefix
           hoistedSlug = "rbHoisted",
+          // Identifier name to assign the imported babelBind to
           babelBindSlug = "rbBabelBind",
-          babelBindModule = "reflective-bind/babel/babelBind",
+          // Location of the main reflective-bind index file
+          indexModule = "reflective-bind",
         },
         file,
       }
@@ -73,7 +72,10 @@ module.exports = function(opts) {
       _bableBindIdentifer = _hoistPath.scope.generateUidIdentifier(
         babelBindSlug
       );
-      _babelBindModuleLiteral = t.stringLiteral(babelBindModule);
+      _babelBindImportDeclaration = t.importDeclaration(
+        [t.importSpecifier(_bableBindIdentifer, t.identifier("babelBind"))],
+        t.stringLiteral(indexModule)
+      );
 
       path.traverse(visitor);
 
@@ -528,17 +530,8 @@ module.exports = function(opts) {
     return t.callExpression(_bableBindIdentifer, args);
   }
 
-  const importTemplate = template(
-    `const FN_NAME = require(MODULE_NAME).default;`
-  );
-
   function addImport() {
-    addToHoistPath(
-      importTemplate({
-        FN_NAME: _bableBindIdentifer,
-        MODULE_NAME: _babelBindModuleLiteral,
-      })
-    );
+    addToHoistPath(_babelBindImportDeclaration);
   }
 
   function addToHoistPath(node) {

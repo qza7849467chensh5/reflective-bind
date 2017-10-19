@@ -1,6 +1,6 @@
 // @flow
 
-import reflectiveBind from "../reflectiveBind";
+import reflectiveBind from "./reflectiveBind";
 
 /**
  * The babel transform will turn any calls to x.bind(...args) to

@@ -3,18 +3,21 @@
 import {transformFileSync} from "babel-core";
 import fs from "fs";
 import path from "path";
-import plugin from "../../src/babel";
+import plugin from "../../babel";
 
+// Hoisted function name prefix
 const HOISTED_SLUG = "testBBHoisted";
+// Identifier name to assign the imported babelBind to
 const BABEL_BIND_IDENTIFIER_NAME = "testBind";
-const BABEL_BIND_MODULE = "../../src/babel/babelBind";
+// Location of the main reflective-bind index file
+const INDEX_MODULE = "../../src";
 
 const TARGET_PLUGIN = [
   plugin,
   {
     hoistedSlug: HOISTED_SLUG,
     babelBindSlug: BABEL_BIND_IDENTIFIER_NAME,
-    babelBindModule: BABEL_BIND_MODULE,
+    indexModule: INDEX_MODULE,
   },
 ];
 

@@ -4,7 +4,7 @@ import * as React from "react";
 
 // Make sure import identifier doesn't conflict when transform adds the import.
 // The module path should be relative to the plugin-test.js file.
-const _testBind = require("../../src/babel/babelBind").default;
+const _testBind = require("../../src").babelBind;
 
 (function() {
   const hoistable = a => a;
