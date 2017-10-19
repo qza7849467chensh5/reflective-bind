@@ -1,6 +1,10 @@
 // @flow
 
-import reflectiveBind, {reflectiveEqual, isReflective} from "../src";
+import reflectiveBind, {
+  isReflective,
+  reflectiveEqual,
+  shouldComponentUpdate,
+} from "../src";
 
 describe("reflectiveBind11", () => {
   function foo(a: number) {
@@ -349,4 +353,36 @@ describe("flow tests", () => {
   // 4 args
   // $ExpectError
   reflectiveBind(foo5, null);
+});
+
+describe("shouldComponentUpdate", () => {
+  function foo() {}
+
+  it("returns true if state changed", () => {
+    const component = {
+      props: {},
+      state: {fn: reflectiveBind(foo, null)},
+    };
+    const changedState = {fn: reflectiveBind(foo, {})};
+    expect(shouldComponentUpdate(component, {}, changedState)).toBe(true);
+  });
+
+  it("returns true if props changed", () => {
+    const component = {
+      props: {fn: reflectiveBind(foo, null)},
+      state: {},
+    };
+    const changedProps = {fn: reflectiveBind(foo, {})};
+    expect(shouldComponentUpdate(component, changedProps, {})).toBe(true);
+  });
+
+  it("returns false if nothing changed", () => {
+    const component = {
+      props: {fn: reflectiveBind(foo, null)},
+      state: {fn: reflectiveBind(foo, null)},
+    };
+    const sameProps = {fn: reflectiveBind(foo, null)};
+    const sameState = {fn: reflectiveBind(foo, null)};
+    expect(shouldComponentUpdate(component, sameProps, sameState)).toBe(false);
+  });
 });
