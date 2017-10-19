@@ -1,12 +1,58 @@
 {
   "name": "reflective-bind",
   "version": "0.0.1",
-  "description": "Coming soon",
-  "main": "src/index.js",
+  "description": "Eliminate wasteful rendering in React components caused by inline functions",
+  "author": "Dounan Shi",
+  "license": "MIT",
+  "keywords": [
+    "arrow function",
+    "babel",
+    "bind",
+    "hoist",
+    "inline function",
+    "optimize",
+    "pure",
+    "PureComponent",
+    "react",
+    "shouldComponentUpdate"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/flexport/reflective-bind.git"
   },
-  "author": "Dounan Shi",
-  "license": "BSD-3-Clause"
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-eslint": "8.0.0",
+    "babel-plugin-transform-flow-comments": "6.22.0",
+    "babel-preset-env": "1.6.0",
+    "babel-preset-react": "6.24.1",
+    "babel-preset-stage-2": "6.24.1",
+    "eslint": "4.7.1",
+    "eslint-plugin-flowtype": "2.35.1",
+    "eslint-plugin-jest": "21.1.0",
+    "flow-bin": "0.54.1",
+    "jest": "20.0.4",
+    "jest-environment-node-debug": "2.0.0",
+    "react": "16.0.0",
+    "rimraf": "2.6.2"
+  },
+  "scripts": {
+    "build": "babel src/ -d dist/",
+    "clean": "rimraf dist",
+    "lint": "eslint src tests",
+    "prepublishOnly": "yarn run flow && yarn run lint && yarn run test && yarn run clean && yarn run build",
+    "test": "jest",
+    "test:debug": "node --inspect-brk ./node_modules/.bin/jest -i --env jest-environment-node-debug"
+  },
+  "jest": {
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true,
+    "testMatch": [
+      "<rootDir>/tests/**/*.js"
+    ]
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ]
 }

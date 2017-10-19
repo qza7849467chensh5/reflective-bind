@@ -1,0 +1,1092 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`reflective-bind babel transform alreadyImported.jsx 1`] = `
+"// @flow
+
+const _testBind2 = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a) {
+  return a;
+}
+
+import * as React from \\"react\\";
+
+// Make sure import identifier doesn't conflict when transform adds the import.
+// The module path should be relative to the plugin-test.js file.
+import _testBind from \\"../../src/babel/babelBind\\";
+
+(function () {
+  const hoistable = _testBind2(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return _testBind(hoistable, null, 1)();
+})();"
+`;
+
+exports[`reflective-bind babel transform alreadyRequired.jsx 1`] = `
+"// @flow
+
+const _testBind2 = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a) {
+  return a;
+}
+
+import * as React from \\"react\\";
+
+// Make sure import identifier doesn't conflict when transform adds the import.
+// The module path should be relative to the plugin-test.js file.
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+(function () {
+  const hoistable = _testBind2(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return _testBind(hoistable, null, 1)();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowBind.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, b, c) {
+  return a + b + c;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const hoistable = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable.bind(null, 1).bind(null, 2).bind(null, 3)();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowComputedProperty.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(prop, obj) {
+  return obj.a[prop];
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  let a = 1;
+  // eslint-disable-next-line no-unused-vars
+  let b = 2;
+  let prop = \\"b\\";
+
+  const hoistable = _testBind(_testBBHoisted, this, prop);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable({ a: { b: 10 } });
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowContext.jsx 1`] = `
+"// @flow
+
+// NOTE: restricting the transform to only JSXExpressionContainer makes this
+// test obsolete, but it is a good test case to have if we decide to loosen up
+// the restrictions on which arrow functions we transform.
+
+(function () {
+  const obj = {
+    foo() {
+      return () => this.value;
+    },
+    value: 1
+  };
+
+  const ignoreThisCtx = { value: 10 };
+  const test = obj.foo().bind(ignoreThisCtx);
+
+  return test();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowDeclareFnAfterFn.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(fn) {
+  return fn;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // Function delcarations can be referenced even if declared after.
+  // eslint-disable-next-line no-unused-vars
+  const hoistable = _testBind(_testBBHoisted, this, fn);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  function fn() {}
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowDeclareVarAfterFn.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  const shouldNotHoist = () => a;
+  const a = 2;
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={shouldNotHoist} />;
+
+  return shouldNotHoist();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowExpressionBody.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, b, c) {
+  return a + b + c;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  let a = 1;
+  const hoistable = _testBind(_testBBHoisted, this, a);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable(2, 3);
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowInlineJsxContainerElement.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted2() {
+  <div />;
+}
+
+function _testBBHoisted() {
+  <div onClick={_testBind(_testBBHoisted2, this)} />;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // Inline arrow fn in JSXExpressionContainer should be hoisted.
+  // Nested arrow fn should also be hoisted.
+  <div onClick={_testBind(_testBBHoisted, this)} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowJsxIdentifier.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(Component) {
+  <Component>
+      <div>1</div>
+    </Component>;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const Component = props => {};
+
+  // Should add \`Component\` as a parameter to the hoisted function, but not
+  // \`div\`.
+  const hoistable = _testBind(_testBBHoisted, this, Component);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowJsxMemberExpression.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(Component) {
+  <Component.Whatever>
+      <div>1</div>
+    </Component.Whatever>;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const Component = props => {};
+
+  // Should add \`Component\` as a parameter to the hoisted function, but not
+  // \`div\` and \`Whatever\`.
+  const hoistable = _testBind(_testBBHoisted, this, Component);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowMemberExpression.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(obj) {
+  return obj.a.b;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  let a = 1;
+  // eslint-disable-next-line no-unused-vars
+  let b = 2;
+
+  const hoistable = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable({ a: { b: 10 } });
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowNested.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, b) {
+  let c = 3;
+  // Should not hoist this returned arrow fn because it is not used in a
+  // JSXExpressionContainer.
+  return d => a + b + c + d;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  let a = 1;
+
+  const hoistable = _testBind(_testBBHoisted, this, a);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable(2)(4);
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowOuterConstAndNonconst.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  function outer(constant: number) {
+    let variable = 2;
+
+    // Should not hoist because it references a non-constant identifier.
+    const shouldNotHoist = () => {
+      variable;
+      return constant;
+    };
+
+    variable = 3;
+
+    // Use in JSXExpressionContainer to enable hoisting
+    <div onClick={shouldNotHoist} />;
+
+    return shouldNotHoist();
+  }
+
+  return outer(1);
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowOuterNonconstant.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  let a = 1;
+
+  // Should not hoist because it references a non-constant identifier.
+  const shouldNotHoist = () => {
+    return a;
+  };
+
+  a = 10;
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={shouldNotHoist} />;
+
+  return shouldNotHoist();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowRedeclareVar.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  let a = 2;
+  return a;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  let a = 1;
+
+  // Should not add \`a\` as a parameter to the hoisted function.
+  const hoistable = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowRedeclareVarAfterFn.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  const a = 1;
+
+  function outer() {
+    // If hoisted, internal \`a\` will have the wrong value
+    const shouldNotHoist = () => a;
+    const a = 2;
+
+    // Use in JSXExpressionContainer to enable hoisting
+    <div onClick={shouldNotHoist} />;
+
+    return shouldNotHoist();
+  }
+
+  return outer();
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowRestSpread.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, ...rest) {
+  return b => a + b + rest.reduce((tot, n) => tot + n, 0);
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const hoistable = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable(1, 2, 3)(4);
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowSimple.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, c, d) {
+  let b = 2;
+  return a + b + c + d;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  let a = 1;
+
+  const hoistable = _testBind(_testBBHoisted, this, a);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable(3, 4);
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowStatelessComponentProps.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(props) {
+  // Only \`props\` should be hoisted because we don't hoist deep attribute
+  // access.
+  props.nested.callback();
+}
+
+import React from \\"react\\";
+
+// eslint-disable-next-line no-unused-vars
+function MyComponent(props: { nested: { callback: () => void } }) {
+  const hoistable = _testBind(_testBBHoisted, this, props);
+
+  return <div onClick={hoistable} />;
+}"
+`;
+
+exports[`reflective-bind babel transform arrowThis.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(outerScopeVar, arg) {
+  // \`this\` should not be hoisted since we're not accessing any
+  // properties on it.
+  this;
+  // \`this.shouldNotHoist\` should not be hoisted because we're not
+  // accessing any properties on it.
+  this.shouldNotHoist;
+  // \`this.shouldNotHoist.val\` should not be hoisted because it is not
+  // props or state.
+  this.shouldNotHoist.val;
+
+  // eslint-disable-next-line no-unused-vars
+  const innerArrow = () => {
+    // \`this.shouldNotHoist.val\` should not be hoisted because it is not
+    // props or state.
+    this.shouldNotHoist.val;
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  function inner() {
+    // Should not hoist references to \`this\` properties in nested
+    // non-arrow functions.
+    this.shouldNotHoist.val;
+  }
+
+  // The outerScopeVar and arg are there just to make sure the hoisted
+  // argument order is correct.
+  return outerScopeVar + arg;
+}
+
+import React from \\"react\\";
+
+(function () {
+  return {
+    foo() {
+      const outerScopeVar = 1;
+      const hoistable = _testBind(_testBBHoisted, this, outerScopeVar);
+
+      // Use in JSXExpressionContainer to enable hoisting
+      <div onClick={hoistable} />;
+    },
+    shouldNotHoist: { val: 1 }
+  };
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowThisCallExpression.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(_temp, _temp2) {
+  // The entire \`this.props.fn\` should be hoisted because we don't
+  // expect that \`fn\` cares about the \`props\` being its context.
+  _temp();
+
+  // Only \`this.props.nested\` should be pulled out so that the call can
+  // still look like \`_temp.nestedFn()\` to preserve the context.
+  _temp2.nestedFn();
+
+  // Only \`this.props.nested\` should be pulled out since we don't hoist
+  // deep attribute accesses.
+  _temp2.deepNested.deepNestedFn();
+}
+
+import React from \\"react\\";
+
+(function () {
+  return {
+    foo() {
+      const hoistable = _testBind(_testBBHoisted, this, this.props.fn, this.props.nested);
+
+      // Use in JSXExpressionContainer to enable hoisting
+      <div onClick={hoistable} />;
+    },
+    props: {
+      fn: () => {},
+      nested: {
+        nestedFn: () => {},
+        deepNested: {
+          deepNestedFn: () => {}
+        }
+      }
+    }
+  };
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowThisProps.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(outerScopeVar, _temp, _temp2, _temp3, arg) {
+  // \`this\` should not be hoisted since we're not accessing any
+  // properties on it.
+  this;
+  // \`this.props\` should be hoisted
+  _temp;
+  // \`this.props.val\` should be hoisted.
+  _temp2;
+  // \`this.props.nested.val\` should only hoist \`this.props.nested\`
+  _temp3.val;
+
+  // eslint-disable-next-line no-unused-vars
+  const innerArrow = () => {
+    // Should still hoist if the nested function is an arrow function.
+    _temp2;
+
+    // eslint-disable-next-line no-unused-vars
+    const innerInnerArrow = () => {
+      // Should still hoist since this arrow function is within a nested
+      // arrow function.
+      _temp2;
+    };
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  function inner() {
+    // Should NOT hoist references to \`this\` properties in nested
+    // non-arrow functions.
+    this.props.val;
+
+    // eslint-disable-next-line no-unused-vars
+    const innerInnerArrow = () => {
+      // Should NOT since this arrow function is within a nested
+      // non-arrow function.
+      this.props.val;
+    };
+  }
+
+  // The outerScopeVar and arg are there just to make sure the hoisted
+  // argument order is correct.
+  return outerScopeVar + arg;
+}
+
+import React from \\"react\\";
+
+(function () {
+  return {
+    foo() {
+      const outerScopeVar = 1;
+      const hoistable = _testBind(_testBBHoisted, this, outerScopeVar, this.props, this.props.val, this.props.nested);
+
+      // Use in JSXExpressionContainer to enable hoisting
+      <div onClick={hoistable} />;
+    },
+    props: {
+      val: 1,
+      nested: { val: 1 }
+    }
+  };
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowThisState.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(outerScopeVar, _temp, _temp2, _temp3, arg) {
+  // \`this\` should not be hoisted since we're not accessing any
+  // properties on it.
+  this;
+  // \`this.state\` should be hoisted
+  _temp;
+  // \`this.state.val\` should be hoisted.
+  _temp2;
+  // \`this.state.nested.val\` should only hoist \`this.state.nested\`
+  _temp3.val;
+
+  // eslint-disable-next-line no-unused-vars
+  const innerArrow = () => {
+    // Should still hoist if the nested function is an arrow function.
+    _temp2;
+
+    // eslint-disable-next-line no-unused-vars
+    const innerInnerArrow = () => {
+      // Should still hoist since this arrow function is within a nested
+      // arrow function.
+      _temp2;
+    };
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  function inner() {
+    // Should NOT hoist references to \`this\` properties in nested
+    // non-arrow functions.
+    this.state.val;
+
+    // eslint-disable-next-line no-unused-vars
+    const innerInnerArrow = () => {
+      // Should NOT since this arrow function is within a nested
+      // non-arrow function.
+      this.state.val;
+    };
+  }
+
+  // The outerScopeVar and arg are there just to make sure the hoisted
+  // argument order is correct.
+  return outerScopeVar + arg;
+}
+
+import React from \\"react\\";
+
+(function () {
+  return {
+    foo() {
+      const outerScopeVar = 1;
+      const hoistable = _testBind(_testBBHoisted, this, outerScopeVar, this.state, this.state.val, this.state.nested);
+
+      // Use in JSXExpressionContainer to enable hoisting
+      <div onClick={hoistable} />;
+    },
+    state: {
+      val: 1,
+      nested: { val: 1 }
+    }
+  };
+})();"
+`;
+
+exports[`reflective-bind babel transform arrowTopLevel.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {}
+
+import * as React from \\"react\\";
+
+const hoistable = _testBind(_testBBHoisted, this);
+
+// Use in JSXExpressionContainer to enable hoisting
+<div onClick={hoistable} />;"
+`;
+
+exports[`reflective-bind babel transform arrowWithFlow.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a, c: C, d: D) {
+  let b = 2;
+  return a + b + c + d;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  let a = 1;
+
+  type C = number;
+  type D = number;
+
+  const hoistable = _testBind(_testBBHoisted, this, a);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistable} />;
+
+  return hoistable(3, 4);
+})();"
+`;
+
+exports[`reflective-bind babel transform bindFlow.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+import * as React from \\"react\\";
+
+(function () {
+  type A = number;
+
+  function test(a: A, b: number) {
+    return a + b;
+  }
+
+  const bindable = _testBind(test, null, 1, 2);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={bindable} />;
+
+  return bindable();
+})();"
+`;
+
+exports[`reflective-bind babel transform bindInlineJsxContainerElement.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+import * as React from \\"react\\";
+
+(function () {
+  function foo() {}
+
+  // Inline bind in JSXExpressionContainer should be converted.
+  <div onClick={_testBind(foo, this)} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform bindNonFunction.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+import * as React from \\"react\\";
+
+(function () {
+  const test = {
+    bind(...args: any) {
+      return 99;
+    }
+  };
+
+  // This will still transformed to a babelBind call, and babelBall will have the
+  // logic to not convert this call to reflective-bind.
+  const bindable = _testBind(test, null);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={bindable} />;
+
+  return bindable;
+})();"
+`;
+
+exports[`reflective-bind babel transform bindSimple.jsx 1`] = `
+"/* eslint-disable flowtype/require-valid-file-annotation */
+/* eslint-disable flowtype/require-parameter-type */
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+import React from \\"react\\";
+
+(function () {
+  function test(a, b) {
+    return a + b;
+  }
+
+  const bindable = _testBind(test, null, 1, 2);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={bindable} />;
+
+  return bindable();
+})();"
+`;
+
+exports[`reflective-bind babel transform bindingNodeLocNPE.jsx 1`] = `
+"// @flow
+
+/**
+ * We were getting a NPE when trying to access a binding's node location.
+ * This is caused when a hoisted function contains an unhoistable function, and
+ * we traverse the hoisted function with our visitor. The hoisted function's
+ * parameters (that are created as a result of referencing variables out of the
+ * function's scope) do not have a location, which causes the NPE. This was
+ * fixed by determining the execution order of code without looking at the
+ * code's source location and using the AST instead.
+ */
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(a) {
+  let nonConst = 3;
+  nonConst = 10;
+  // eslint-disable-next-line no-unused-vars
+  const notHoistable = () => a + nonConst;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  function wrapper() {
+    const a = 1;
+
+    const hoistable = _testBind(_testBBHoisted, this, a);
+
+    // Use in JSXExpressionContainer to enable hoisting
+    <div onClick={hoistable} />;
+  }
+})();"
+`;
+
+exports[`reflective-bind babel transform flowGenerics.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  let arr: Array<number> = [1, 2, 3];
+  return arr.reduce((sum, next) => sum + next, 0);
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const hoistMeWithoutFlowIdentifiers = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistMeWithoutFlowIdentifiers} />;
+
+  return hoistMeWithoutFlowIdentifiers();
+})();"
+`;
+
+exports[`reflective-bind babel transform flowObjMap.jsx 1`] = `
+"// @flow
+// https://flow.org/en/docs/types/utilities/#toc-objmap
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  // eslint-disable-next-line space-before-function-paren, no-unused-vars
+  function run<A, O: { [key: string]: () => A }>(o: O): $ObjMap<O, <V>(: () => V) => V> {
+    return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
+  }
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  const hoistMeWithoutFlowIdentifiers = _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={hoistMeWithoutFlowIdentifiers} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform jestMock.jsx 1`] = `
+"// @flow
+
+(function () {
+  jest.mock(\\"foo\\", () => {
+    // eslint-disable-next-line no-unused-vars
+    const shouldNotHoist = () => {};
+  });
+
+  jest.mock(\\"foo\\", function () {
+    // eslint-disable-next-line no-unused-vars
+    const shouldNotHoist = () => {};
+  });
+})();"
+`;
+
+exports[`reflective-bind babel transform jestMockNestedArrowFn.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  jest.mock(\\"foo\\", () => {
+    // eslint-disable-next-line no-unused-vars
+    const shouldNotHoist = () => {};
+    <div onClick={shouldNotHoist} />;
+  });
+})();"
+`;
+
+exports[`reflective-bind babel transform mapArrow.jsx 1`] = `
+"// @flow
+
+(function () {
+  // Should not hoist any of these arrow functions.
+  [].map(a => {
+    return () => a;
+  });
+})();"
+`;
+
+exports[`reflective-bind babel transform noTransform.jsx 1`] = `
+"// @flow
+// @no-reflective-bind-babel
+
+import * as React from \\"react\\";
+
+(function () {
+  // Should not be hoisted because of the @no-reflective-bind-babel above.
+  const shouldNotHoist = () => {};
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={shouldNotHoist} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform reassignIdentifier.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  return 1;
+}
+
+import * as React from \\"react\\";
+
+function foo() {}
+
+(function () {
+  let fn;
+
+  fn = _testBind(_testBBHoisted, this);
+  fn = _testBind(foo, null);
+
+  // not hoistable
+  let a = 1;
+  a = 2;
+  fn = () => a;
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={fn} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform recursive.jsx 1`] = `
+"// @flow
+
+import * as React from \\"react\\";
+
+(function () {
+  const shouldNotHoist = () => shouldNotHoist();
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={shouldNotHoist} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform renameIdentifier.jsx 1`] = `
+"// @flow
+
+/**
+ * We were sharing the same identifier object for the argument in the call to
+ * the hoisted function and the hoisted function parameter. This caused an
+ * issue where if the identifier is renamed at the call site, the function
+ * parameter is also renamed.
+ */
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted(w) {
+  return w;
+}
+
+import * as React from \\"react\\";
+
+(function () {
+  // eslint-disable-next-line no-unused-vars
+  function foo() {
+    switch (\\"a\\") {
+      case \\"b\\":
+        {
+          // eslint-disable-next-line no-unused-vars
+          const w = 1;
+          break;
+        }
+      case \\"c\\":
+        {
+          // 'w' will be renamed to '_w' by another babel transform.
+          const w = 2;
+          const hoistable = _testBind(_testBBHoisted, this, w);
+
+          // Use in JSXExpressionContainer to enable hoisting
+          <div onClick={hoistable} />;
+
+          break;
+        }
+    }
+  }
+})();"
+`;
+
+exports[`reflective-bind babel transform ternaryExpression.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  return 1;
+}
+
+import * as React from \\"react\\";
+
+function foo() {}
+
+(function () {
+  const condition = true;
+  const fn = condition ? _testBind(foo, null) : _testBind(_testBBHoisted, this);
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={fn} />;
+})();"
+`;
+
+exports[`reflective-bind babel transform ternaryExpressionInline.jsx 1`] = `
+"// @flow
+
+const _testBind = require(\\"../../src/babel/babelBind\\").default;
+
+function _testBBHoisted() {
+  return 1;
+}
+
+import * as React from \\"react\\";
+
+function foo() {}
+
+(function () {
+  const condition = true;
+
+  // Use in JSXExpressionContainer to enable hoisting
+  <div onClick={condition ? _testBind(foo, null) : _testBind(_testBBHoisted, this)} />;
+})();"
+`;

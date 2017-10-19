@@ -1,2 +1,3 @@
-module.exports = 'Hello world!';
+// @flow
 
+export {default, reflectiveEqual, isReflective} from "./reflectiveBind";

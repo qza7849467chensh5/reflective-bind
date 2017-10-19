@@ -1,0 +1,8 @@
+[ignore]
+<PROJECT_ROOT>/tests/babel/fixtures
+
+[libs]
+flow-typed
+
+[options]
+suppress_comment=\\(.\\|\n\\)*\\$ExpectError
