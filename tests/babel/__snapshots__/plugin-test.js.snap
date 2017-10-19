@@ -906,36 +906,6 @@ import * as React from \\"react\\";
 })();"
 `;
 
-exports[`reflective-bind babel transform jestMock.jsx 1`] = `
-"// @flow
-
-(function () {
-  jest.mock(\\"foo\\", () => {
-    // eslint-disable-next-line no-unused-vars
-    const shouldNotHoist = () => {};
-  });
-
-  jest.mock(\\"foo\\", function () {
-    // eslint-disable-next-line no-unused-vars
-    const shouldNotHoist = () => {};
-  });
-})();"
-`;
-
-exports[`reflective-bind babel transform jestMockNestedArrowFn.jsx 1`] = `
-"// @flow
-
-import * as React from \\"react\\";
-
-(function () {
-  jest.mock(\\"foo\\", () => {
-    // eslint-disable-next-line no-unused-vars
-    const shouldNotHoist = () => {};
-    <div onClick={shouldNotHoist} />;
-  });
-})();"
-`;
-
 exports[`reflective-bind babel transform mapArrow.jsx 1`] = `
 "// @flow
 

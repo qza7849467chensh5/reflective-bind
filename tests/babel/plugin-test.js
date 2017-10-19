@@ -104,8 +104,6 @@ const EVAL_RESULTS = {
   "fnSimple.jsx": 4,
   "fnTopLevel.jsx": undefined,
   "fnWithFlow.jsx": 4,
-  "jestMock.jsx": undefined,
-  "jestMockNestedArrowFn.jsx": undefined,
   "mapArrow.jsx": undefined,
   "noTransform.jsx": undefined,
   "reassignIdentifier.jsx": undefined,

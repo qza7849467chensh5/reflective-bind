@@ -104,15 +104,6 @@ module.exports = function(opts) {
         processPath(exprPath);
       }
     },
-
-    CallExpression(path) {
-      // babel-plugin-jest-hoist relies on the second argument to jest.mock to be
-      // a Function node, so we cannot hoist those.
-      if (isJestMock(path)) {
-        path.skip();
-        return;
-      }
-    },
   };
 
   function processPath(path) {
@@ -182,19 +173,6 @@ module.exports = function(opts) {
         ...makeIdentifiers(state.outerIdentifierNames),
         ...thisUsageNodes
       )
-    );
-  }
-
-  function isJestMock(path) {
-    const node = path.node;
-    return (
-      t.isCallExpression(node) &&
-      t.isMemberExpression(node.callee) &&
-      !node.callee.computed &&
-      t.isIdentifier(node.callee.object) &&
-      node.callee.object.name === "jest" &&
-      t.isIdentifier(node.callee.property) &&
-      node.callee.property.name === "mock"
     );
   }
 
