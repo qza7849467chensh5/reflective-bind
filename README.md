@@ -3,11 +3,11 @@
 
 # Reflective Bind
 
-The `reflective-bind/babel` plugin enables you to freely use inline arrow functions in the render method of React components without worrying about deoptimizing pure components.
+In React, using inline functions (arrow functions and `Function.prototype.bind`) in render will [cause pure components to wastefully re-render]((https://flexport.engineering/optimizing-react-rendering-part-1-9634469dca02)). As a result, many React developers encourage you to [never use inline functions](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-no-bind.md) in render. However, others think that [avoiding them is premature optimization](https://cdb.reacttraining.com/react-inline-functions-and-performance-bdff784f5578).
 
-## Motivation
+With reflective-bind, you can freely use inline functions in render without worrying about wasteful re-rendering of pure components.
 
-Using inline functions (arrow functions and `Function.prototype.bind`) in render will [deoptimize pure child components]((https://flexport.engineering/optimizing-react-rendering-part-1-9634469dca02)). As a result, many React developers encourage you to [never use inline functions](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-no-bind.md) in your render function. However, others think that [avoiding them is premature optimization](https://cdb.reacttraining.com/react-inline-functions-and-performance-bdff784f5578). With reflective bind you can use inline functions and have optimized pure components.
+The best part is, it requires almost no code change 🙌
 
 ## Installation
 
@@ -17,7 +17,7 @@ npm install --save reflective-bind
 
 ## Using the babel plugin
 
-Add it to the top of your plugin list in `.babelrc` (just has to come before other plugins that transform arrow functions and `bind` calls):
+Add it to the top of your plugin list in `.babelrc` (it just has to come before other plugins that transform arrow functions and `bind` calls):
 
 ```
 "plugins": [
@@ -26,7 +26,7 @@ Add it to the top of your plugin list in `.babelrc` (just has to come before oth
 ]
 ```
 
-And implement `shouldComponentUpdate` in your component:
+And call reflective bind’s `shouldComponentUpdate` helper function in your component:
 
 ```js
 import {shouldComponentUpdate} from "reflective-bind";
@@ -64,7 +64,7 @@ The babel plugin will add ES6 import declarations to your code. This shouldn’t
 
 ### What the plugin does
 
-The plugin simply transforms inline functions into calls to `reflectiveBind`, and the `shouldComponentUpdate` helper function uses `reflectiveEqual` in the shallow comparison equality check.
+The plugin simply transforms inline functions into calls to `reflectiveBind`. This then allows the `shouldComponentUpdate` helper function to use `reflectiveEqual` in the shallow comparison equality check.
 
 ## Using reflectiveBind manually
 
@@ -120,7 +120,9 @@ reflectiveBind(baseFn, ctx, a, b, c, d);
 
 ## Babel plugin examples
 
-The following examples of inline functions can all be transformed into calls to `reflectiveBind`:
+The following are examples of some inline functions that will be transformed into calls to `reflectiveBind` by the babel plugin:
+
+- Inline arrow functions:
 
 ```js
 function MyComponent(props) {
@@ -129,17 +131,19 @@ function MyComponent(props) {
 }
 ```
 
+- `Function.prototype.bind`:
+
 ```js
 function MyComponent(props) {
-  // Supports Function.prototype.bind
   const handleClick = props.callback.bind(undefined, "yay");
   return <PureChild onClick={handleClick} />
 }
 ```
 
+- Multiple assignments / reassignments:
+
 ```js
 function MyComponent(props) {
-  // Supports multiple assignments / reassignments
   let handleClick = () => {...};
   
   if (...) {
@@ -152,9 +156,10 @@ function MyComponent(props) {
 }
 ```
 
+- Ternary expressions:
+
 ```js
 function MyComponent(props) {
-  // Supports ternary expressions
   const handleClick = props.condition
     ? () => {...}
     : () => {...};
@@ -163,28 +168,24 @@ function MyComponent(props) {
 }
 ```
 
+- For maximum optimization, avoid accessing nested attributes in your arrow function. Prefer to pull the nested value out to a const and close over it in your arrow function.
+
 ```js
-class MyComponent extends React.Component {
-  render() {
-    // For class components, referencing `this.props.___` and `this.state.___`
-    // from within your arrow function is supported, but we recommend you to
-    // extract these references out to a const, especially if you are
-    // accessing deeply nested attributes (e.g. `this.props.user.name.first`).
-    
-    // PureChild will re-render whenever `user` changes.
-    const decentHandler = () => alert(this.props.user.name.first);
-    
-    // PureChild re-render ONLY when the first name changes.
-    const firstName = this.props.user.name.first;
-    const betterHandler = () => alert(firstName);
-    
-    return (
-      <div>
-        <PureChild onClick={decentHandler} />
-        <PureChild onClick={betterHandler} />
-      </div>
-    );
-  }
+function MyComponent(props) {
+  
+  // PureChild will re-render whenever `props` changes (bad)
+  const badHandleClick = () =>  alert(props.user.name.first);
+  
+  const firstName = props.user.name.first;
+  // Now, PureChild will only re-render when firstName changes (good)
+  const goodHandleClick = () => alert(firstName);
+  
+  return (
+    <div>
+      <PureChild onClick={badHandleClick} />
+      <PureChild onClick={goodHandleClick} />
+    </div>
+  );
 }
 ```
 
@@ -199,8 +200,8 @@ function MyComponent(props) {
   let foo = 1;
   
   const badHandleClick = () => {
-    // Referencing `foo` will deopt since it is reassigned after
-    // this arrow function.
+    // Referencing `foo`, which is reassigned after this arrow function, will
+    // prevent this arrow function from being transformed.
     alert(foo);
   };
   
@@ -214,12 +215,13 @@ function MyComponent(props) {
 
 ```js
 function MyComponent(props) {
-  // This arrow function won't be optimized because `fn` is not referenced
-  // in the JSX.
+  // This arrow function won't be transformed because `fn` is not referenced
+  // directly in the JSX.
   const fn = () => {...};
   const badHandleClick = fn;
                     
-  // This will be optimized since `goodHandleClick` is referenced in the JSX.
+  // This arrow function will be transformed since `goodHandleClick` is
+  // referenced directly in the JSX.
   const goodHandleClick = () => {...};
                     
   return (
@@ -230,35 +232,6 @@ function MyComponent(props) {
       
       {/* This will be optimized since it is defined directly in the JSX */}
       <PureChild onClick={() => {...}} />
-    </div>
-  );
-}
-```
-
-- For maximum optimization, avoid accessing nested attributes in your arrow function. Prefer to pull the values out to a const and close over it in your arrow function.
-
-```js
-function MyComponent(props) {
-  
-  const badHandleClick = () => {
-    // Referencing nested attributes inside the arrow function will cause
-    // PureChild to re-render whenever the outermost object changes. In this
-    // case, `props` will change every render, which will cause PureChild to
-    // always re-render.
-    alert(props.user.name.first);
-  };
-  
-  const firstName = props.user.name.first;
-  const goodHandleClick = () => {
-    // To avoid referencing nested attributes inside the arrow function,
-    // simply extract it out to a const, and reference the const.
-    alert(firstName);
-  };
-  
-  return (
-    <div>
-      <PureChild onClick={badHandleClick} />
-      <PureChild onClick={goodHandleClick} />
     </div>
   );
 }
