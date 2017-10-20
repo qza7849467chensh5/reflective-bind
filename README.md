@@ -17,7 +17,7 @@ npm install --save reflective-bind
 
 ## Using the babel plugin
 
-Add it to the top of your plugin list in `.babelrc` (it just has to come before other plugins that transform arrow functions and `bind` calls):
+Add it to the top of your plugin list in `.babelrc` (it must be run before other plugins that transform arrow functions and `bind` calls):
 
 ```
 "plugins": [
