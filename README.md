@@ -3,7 +3,7 @@
 
 # Reflective Bind
 
-The `reflective-bind/babel` plugin enables you freely use inline arrow functions in the render method of React components without worrying about deoptimizing pure components.
+The `reflective-bind/babel` plugin enables you to freely use inline arrow functions in the render method of React components without worrying about deoptimizing pure components.
 
 ## Motivation
 
@@ -53,7 +53,7 @@ React.PureComponent.prototype.shouldComponentUpdate = function(
 };
 ```
 
-If for some reason you want the babel plugin to skip processing a specific file, add the following to the file.
+If you do not want the babel plugin to process a specific file, add the following line to your file:
 
 ```js
 // @no-reflective-bind-babel
