@@ -236,3 +236,14 @@ function MyComponent(props) {
   );
 }
 ```
+
+- Inline functions on html literals will not be transformed.
+
+```jsx
+function MyComponent(props) {
+  // This arrow function will not be transformed because it is used on an html
+  // literal.
+  const handleClick = () => {...};
+  return <div onClick={handleClick} />;
+}
+```
