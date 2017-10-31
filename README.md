@@ -68,7 +68,7 @@ The plugin simply transforms inline functions into calls to `reflectiveBind`. Th
 
 ## Using reflectiveBind manually
 
-Binding your function with `reflectiveBind` simply stores the original function, the context (thisArg), and the args on the bound function instance. This allows you to check if two reflectively bound functions are equal.
+Binding your function with `reflectiveBind` simply stores the original function, the context (thisArg), and the arguments as properties on the bound function instance. This allows you to check if two reflectively bound functions are equal.
 
 ```js
 import reflectiveBind, {reflectiveEqual} from "reflective-bind";
