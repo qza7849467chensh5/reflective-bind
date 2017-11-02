@@ -40,6 +40,7 @@ const SKIP_RE = /^\/\/ @no-reflective-bind-babel$/m;
 module.exports = function(opts) {
   const t = opts.types;
 
+  let _fileName;
   let _hoistedSlug;
   let _hoistPath;
   let _needImport = false;
@@ -67,6 +68,8 @@ module.exports = function(opts) {
       if (SKIP_RE.test(file.code)) {
         return;
       }
+
+      _fileName = file.opts.filename;
       _hoistPath = path;
       _hoistedSlug = hoistedSlug;
       _bableBindIdentifer = _hoistPath.scope.generateUidIdentifier(
@@ -146,11 +149,36 @@ module.exports = function(opts) {
     }
   }
 
+  /**
+   * To minimize the chances of bugs due to stale render callbacks, we do NOT
+   * transform  calls to `PREFIX.bind(...)` if PREFIX:
+   *     - Starts with `this`, unless:
+   *         - Starts with `this.props`
+   *             - Assume parent component will not pass in a stale callback.
+   *         - Is exactly `this.fn` and the `fn` implementation is deemed "safe"
+   *             - See isSafeThisFnReference
+   */
   function processCallExpression(path) {
+    const memberExpressionParts = getNonComputedParts(path.node.callee);
     if (
-      t.isMemberExpression(path.node.callee) &&
-      t.isIdentifier(path.node.callee.property, {name: "bind"})
+      memberExpressionParts &&
+      t.isIdentifier(memberExpressionParts[memberExpressionParts.length - 1], {
+        name: "bind",
+      })
     ) {
+      if (
+        t.isThisExpression(memberExpressionParts[0]) &&
+        !t.isIdentifier(memberExpressionParts[1], {name: "props"}) &&
+        // The slice removes the last `bind` identifier
+        !isSafeThisMethodReference(memberExpressionParts.slice(0, -1), path)
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "reflective-bind/babel warning: potential stale render after transforming call to fn.bind:",
+          _fileName,
+          path.node.loc.start
+        );
+      }
       _needImport = true;
       path.replaceWith(
         callReflectiveBindExpression(
@@ -161,6 +189,299 @@ module.exports = function(opts) {
     }
   }
 
+  /**
+   * If the node is an Identifier, return [node].
+   * 
+   * If the ndoe is a MemberExpression, decompose the MemberExpression into its
+   * parts only if all children are Identifiers or ThisExpressions, and no
+   * property is computed. For example:
+   * 
+   *     this.a.b => [this, a, b]
+   * 
+   * The return value will be an array of nodes.
+   * 
+   * Otherwise, return null.
+   */
+  function getNonComputedParts(node) {
+    if (t.isIdentifier(node)) {
+      return [node];
+    }
+    const parts = [];
+    let curNode = node;
+    while (curNode) {
+      if (
+        curNode.computed ||
+        !t.isMemberExpression(curNode) ||
+        !t.isIdentifier(curNode.property)
+      ) {
+        return null;
+      }
+      parts.unshift(curNode.property);
+      /* istanbul ignore else */
+      if (t.isMemberExpression(curNode.object)) {
+        curNode = curNode.object;
+      } else if (
+        t.isIdentifier(curNode.object) ||
+        t.isThisExpression(curNode.object)
+      ) {
+        parts.unshift(curNode.object);
+        return parts;
+      } else {
+        return null;
+      }
+    }
+    /* istanbul ignore next */
+    return null;
+  }
+
+  /**
+   * A function reference is deemed "safe" if the implementation does not
+   * return anything (not a render callback), or if there are no references to
+   * `this`.
+   */
+  function isSafeThisMethodReference(memberExpressionParts, startSearchPath) {
+    if (
+      memberExpressionParts.length !== 2 ||
+      !t.isThisExpression(memberExpressionParts[0]) ||
+      !t.isIdentifier(memberExpressionParts[1])
+    ) {
+      return false;
+    }
+    const componentMethodPath = getComponentMethodPath(
+      startSearchPath,
+      memberExpressionParts[1].name
+    );
+    if (!componentMethodPath) {
+      return false;
+    }
+    return isSafeFunction(componentMethodPath);
+  }
+
+  function getComponentMethodPath(startSearchPath, fnName) {
+    let curPath = startSearchPath.getFunctionParent();
+    while (curPath) {
+      if (
+        curPath.parentPath &&
+        t.isProperty(curPath.parentPath.node) &&
+        curPath.parentPath.parentPath &&
+        t.isObjectExpression(curPath.parentPath.parentPath.node)
+      ) {
+        return findFnPathByKey(
+          curPath.parentPath.parentPath.get("properties"),
+          fnName
+        );
+      }
+
+      if (
+        t.isClassMethod(curPath.node) &&
+        curPath.parentPath &&
+        t.isClassBody(curPath.parentPath.node)
+      ) {
+        return findFnPathByKey(curPath.parentPath.get("body"), fnName);
+      }
+
+      if (
+        curPath.parentPath &&
+        t.isClassProperty(curPath.parentPath.node) &&
+        curPath.parentPath.parentPath &&
+        t.isClassBody(curPath.parentPath.parentPath.node)
+      ) {
+        return findFnPathByKey(
+          curPath.parentPath.parentPath.get("body"),
+          fnName
+        );
+      }
+
+      curPath = curPath.parentPath;
+    }
+    return null;
+  }
+
+  function findFnPathByKey(pathList, keyName) {
+    for (let i = 0, n = pathList.length; i < n; i++) {
+      const path = pathList[i];
+      const node = path.node;
+      if (t.isIdentifier(node.key) && node.key.name === keyName) {
+        if (t.isFunction(path.node)) {
+          return path;
+        } else if (t.isFunction(path.node.value)) {
+          return path.get("value");
+        } else {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  function isSafeFunction(path) {
+    const state = {
+      // Does this arrow function return a value
+      hasReturn:
+        t.isArrowFunctionExpression(path.node) &&
+        !t.isBlockStatement(path.node.body),
+      // First unsafe call expression
+      unsafeCallExpression: null,
+      // First unsafe reference to `this`
+      unsafeThisPath: null,
+    };
+
+    path.traverse(componentMethodVisitor, state);
+
+    if (state.hasReturn && state.unsafeThisPath) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "*** reflective-bind warning ***\n" +
+          "  Potential stale render after transforming arrow function due to dangerous `this` access.\n  " +
+          _fileName +
+          " " +
+          JSON.stringify(state.unsafeThisPath.node.loc.start)
+      );
+    }
+
+    if (state.hasReturn && state.unsafeCallExpression) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "*** reflective-bind warning ***\n" +
+          "  Potential stale render after transforming arrow function due to dangerous call to function.\n  " +
+          _fileName +
+          " " +
+          JSON.stringify(state.unsafeCallExpression.node.loc.start)
+      );
+    }
+
+    return !state.hasReturn || (!state.hasThis && !state.hasCallExpression);
+  }
+
+  const componentMethodVisitor = {
+    CallExpression(path, state) {
+      state.unsafeCallExpression =
+        state.unsafeCallExpression ||
+        // If the node doesn't have a loc, then it is a new node that we
+        // created. Ignore these because the user can't take action on them.
+        (path.node.loc && !isMethodWhitelisted(path) && !isValueUsed(path)
+          ? path
+          : null);
+
+      path.skip();
+    },
+
+    ReturnStatement(path, state) {
+      if (path.node.argument) {
+        state.hasReturn = true;
+      }
+    },
+
+    ThisExpression(path, state) {
+      state.unsafeThisPath =
+        state.unsafeThisPath ||
+        // If the node doesn't have a loc, then it is a new node that we
+        // created. Ignore these because the user can't take action on them.
+        (path.node.loc && isValueUsed(path) && !isSafeThisAccess(path)
+          ? path
+          : undefined);
+    },
+  };
+
+  // Just assume these methods are safe.
+  // Could be dangerous since different objects can implement these methods in
+  // an impure way.
+  const WHITELISTED_METHOD_NAMES = {
+    // From Array.prototype
+    concat: true,
+    entries: true,
+    every: true,
+    filter: true,
+    find: true,
+    findIndex: true,
+    forEach: true,
+    includes: true,
+    indexOf: true,
+    join: true,
+    keys: true,
+    lastIndexOf: true,
+    map: true,
+    reduce: true,
+    reduceRight: true,
+    slice: true,
+    some: true,
+    toLocaleString: true,
+    toSource: true,
+    toString: true,
+    values: true,
+  };
+
+  // TODO: Object static and prototype methods
+  // TODO: Array static methods
+  function isMethodWhitelisted(callExpressionPath) {
+    if (isSetState(callExpressionPath.node)) {
+      return true;
+    }
+    const node = callExpressionPath.node;
+    if (
+      t.isMemberExpression(node.callee) &&
+      !node.callee.computed &&
+      t.isIdentifier(node.callee.property) &&
+      WHITELISTED_METHOD_NAMES.hasOwnProperty(node.callee.property.name) &&
+      WHITELISTED_METHOD_NAMES[node.callee.property.name]
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  function isSetState(node) {
+    return (
+      t.isCallExpression(node) &&
+      t.isMemberExpression(node.callee) &&
+      t.isThisExpression(node.callee.object) &&
+      t.isIdentifier(node.callee.property) &&
+      node.callee.property.name === "setState"
+    );
+  }
+
+  function isValueUsed(callExpressionPath) {
+    let curPath = callExpressionPath;
+    while (curPath) {
+      if (
+        t.isVariableDeclarator(curPath.node) ||
+        t.isAssignmentExpression(curPath.node) ||
+        t.isReturnStatement(curPath.node)
+      ) {
+        return true;
+      }
+      if (
+        t.isArrowFunctionExpression(curPath.node) &&
+        !t.isBlockStatement(curPath.node.body)
+      ) {
+        return true;
+      }
+      if (t.isFunction(curPath.node)) {
+        return false;
+      }
+      curPath = curPath.parentPath;
+    }
+    return false;
+  }
+
+  function isSafeThisAccess(thisPath) {
+    const parentNode = thisPath.parentPath.node;
+    return (
+      t.isMemberExpression(parentNode) &&
+      !parentNode.computed &&
+      t.isIdentifier(parentNode.property) &&
+      (parentNode.property.name === "props" ||
+        parentNode.property.name === "state")
+    );
+  }
+
+  /**
+   * Things that prevent arrow function from being hoisted:
+   *   - Reference to identifier that is declared/reassigned after the fn.
+   *   - If arrow function returns a value (render callback):
+   *     - Any CallExpression that is not `this.props.___()`
+   *     - Any ThisExpression that is not `this.props*` or `this.state*`
+   */
   function processArrowFunctionExpression(path) {
     // Don't hoist if the arrow function is top level (defined in the same
     // scope as the hoist path) since that is where it's going to be hoisted
@@ -171,7 +492,7 @@ module.exports = function(opts) {
 
     const state = {
       fnPath: path,
-      canHoist: true,
+      invalidIdentifier: true,
       // Set of identifiers that are bound outside of the function.
       outerIdentifierNames: new Set(),
       // List of all member expressions that start with "this.props" or
@@ -179,9 +500,21 @@ module.exports = function(opts) {
       thisUsagePaths: [],
     };
     path.traverse(arrowFnVisitor, state);
-    if (!state.canHoist) {
+
+    if (!state.invalidIdentifier) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "*** reflective-bind warning ***\n" +
+          "  Not transforming arrow function because it closes over a variable that is assigned after the function definition.\n  " +
+          _fileName +
+          " " +
+          JSON.stringify(path.node.loc.start)
+      );
       return;
     }
+
+    isSafeFunction(path);
+
     _needImport = true;
 
     // Convert member expressions that start with `this` into arguments and
@@ -209,6 +542,10 @@ module.exports = function(opts) {
   }
 
   const arrowFnVisitor = {
+    Flow(path) {
+      path.skip();
+    },
+
     Identifier(path, state) {
       arrowFnIdentifier(path, state);
     },
@@ -218,6 +555,14 @@ module.exports = function(opts) {
     },
 
     ThisExpression(path, state) {
+      // Ideally, we wouldn't need this check, but in babel 6.24.1 path.stop()
+      // does not actually stop the entire traversal, only the traversal of the
+      // remaining visitor keys of the parent node.
+      if (!state.invalidIdentifier) {
+        path.stop();
+        return;
+      }
+
       // Only allow hoisting if `this` refers to the same `this` as the arrow
       // function we want to hoist.
       if (!isDefinitelySameThisContext(state.fnPath, path)) {
@@ -256,17 +601,13 @@ module.exports = function(opts) {
 
       state.thisUsagePaths.push(memberExpressionPath);
     },
-
-    Flow(path) {
-      path.skip();
-    },
   };
 
   function arrowFnIdentifier(path, state) {
     // Ideally, we wouldn't need this check, but in babel 6.24.1 path.stop()
     // does not actually stop the entire traversal, only the traversal of the
     // remaining visitor keys of the parent node.
-    if (!state.canHoist) {
+    if (!state.invalidIdentifier) {
       path.stop();
       return;
     }
@@ -274,7 +615,7 @@ module.exports = function(opts) {
     if (!binding) {
       return;
     }
-    state.canHoist =
+    state.invalidIdentifier =
       // Since we have determined that this identifier is bound outside the
       // scope of the function, we must pass this identifier into the hoisted
       // function. This means that we will reference the binding immediately,
@@ -296,7 +637,7 @@ module.exports = function(opts) {
           return isPathDefinitelyBeforeOtherPath(p, state.fnPath);
         }));
 
-    if (!state.canHoist) {
+    if (!state.invalidIdentifier) {
       // This line unfortunately only stops traversing the visitor keys of the
       // parent node, but ideally here it would stop the entire arrowFnVisitor
       // traversal.
@@ -408,7 +749,7 @@ module.exports = function(opts) {
       return false;
     }
 
-    /* instanbul ignore if */
+    /* istanbul ignore if */
     if (checkPathAncestorIdx < 0 || otherPathAncestorIdx <= 0) {
       // This means that there is no common ancestor, which should never happen.
       throw new Error(
@@ -492,7 +833,8 @@ module.exports = function(opts) {
   }
 
   /**
-   * Returns true only if path has the same `this` context as parentPath.
+   * Returns true only if path is guaranteed to have the same `this` context as
+   * parentPath.
    * 
    * This means that the function-ancestor chain must only consist of arrow
    * functions.
