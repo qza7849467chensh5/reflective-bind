@@ -3,7 +3,7 @@
 
 # Reflective Bind
 
-With reflective-bind, you can freely use inline functions in render without worrying about wasteful re-rendering of React pure components. It works for both stateless functional and class components. The best part is, it requires almost no code change 🙌
+With reflective-bind, you can freely use inline functions in render without worrying about wasteful re-rendering of React pure components. It works for both stateless functional components and class components. The best part is, it requires almost no code change 🙌
 
 
 [Check out our blog post](https://flexport.engineering/ending-the-debate-on-inline-functions-in-react-8c03fabd144) for more info on the motivation and the inner workings of reflective-bind.
