@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 0.0.4-rc1
+
+- Don't transform inline functions on `ref` prop.
+- Don't transform arrow functions defined at the top level.
 
 ## 0.0.3
 
