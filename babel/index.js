@@ -9,7 +9,7 @@
  *
  * Function.prototype.bind:
  *   - Simply replace `expression.bind(...bindArgs)` with
- *     `reflectiveBind(expression, ...bindArgs)`
+ *     `babelBind(expression, ...bindArgs)`
  *
  * Arrow Functions
  *   - Bail if function closes over any non-constant variables. Since the
@@ -20,16 +20,21 @@
  *     Since we replace the function call with a call to `babelBind` and pass 
  *     in the closed over variables, it would result in an reference error. 
  *   - Otherwise, hoist the arrow function to module level function and replace
- *     the arrow function with: `reflectiveBind(hoisted, this, ...constants)`,
+ *     the arrow function with: `babelBind(hoisted, this, ...constants)`,
  *     where `constants` is a list of all the constant variables that the
  *     arrow function closed over (could be empty).
  *
  * Function Expressions:
  *   - There are a lot of edge cases with function expressions, and with the
  *     rise of arrow functions, it is currently not worthwhile to support them.
+ *   - The difficulty with function expressions is that the `this` context can
+ *     be bound after function definition, but calling `babelBind` requires us
+ *     to pick a context to bind to.
  *   - If we want to support them, the best way is via a reflectivePartial
  *     implementation. You would follow the same logic as arrow functions, but
- *     you would hoist and replace with a call to reflectivePartial.
+ *     you would hoist and replace with a call to reflectivePartial. Either
+ *     that or only support functions that are immediately bound:
+ *     `function() {...}.bind(...)`.
  *   - Things to think through more: async and generator functions.
  */
 
