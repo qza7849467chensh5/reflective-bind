@@ -5,8 +5,11 @@
 
 With reflective-bind, you can freely use inline functions in render without worrying about wasteful re-rendering of React pure components. It works for both stateless functional components and class components. The best part is, it requires almost no code change 🙌
 
-
 [Check out our blog post](https://flexport.engineering/ending-the-debate-on-inline-functions-in-react-8c03fabd144) for more info on the motivation and the inner workings of reflective-bind.
+
+## Performance Benefits
+
+For one of Flexport's more complex forms, turning on the Babel transform reduced the wasted render time from 175ms to 18ms. Your mileage will vary based on the structure of your app and your use of pure components.
 
 ## Installation
 
@@ -15,6 +18,8 @@ npm install --save reflective-bind
 ```
 
 ## Using the babel plugin
+
+*NOTE: the design goal of the plugin is to preserve the semantics of your code. Your inline functions will still create new function instances each render. The transform simply enables the equality comparison of two function instances via reflection.*
 
 Add it to the top of your plugin list in `.babelrc` (it must be run before other plugins that transform arrow functions and `bind` calls):
 
