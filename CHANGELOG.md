@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 * Don't transform inline functions on `ref` prop.
 * Don't transform arrow functions defined at the top level.
+* Don't transform `fn[bind](...)`
+* Use reflective equality when comparing reflectively bound arguments.
 * Don't transform functions referencing a variable that is re-assigned in a
   different function.
 
