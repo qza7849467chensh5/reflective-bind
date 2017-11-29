@@ -40,17 +40,20 @@
 
 // NOTE: this file written to run directly in node without being transpiled
 
+const logger = require("./utils/logger");
+
 const SKIP_RE = /^\/\/ @no-reflective-bind-babel$/m;
 
 module.exports = function(opts) {
   const t = opts.types;
 
+  let _filename;
   let _hoistedSlug;
   let _bableBindIdentifer;
   let _babelBindImportDeclaration;
 
   let _hoistPath;
-  let _needImport = false;
+  let _totalTransformedInAllFiles = 0;
 
   const rootVisitor = {
     // TODO: figure out how to not do the explicit recursive traversal.
@@ -60,6 +63,8 @@ module.exports = function(opts) {
       path,
       {
         opts: {
+          log = "off",
+
           // Hoisted function name prefix
           hoistedSlug = "rbHoisted",
           // Identifier name to assign the imported babelBind to
@@ -73,6 +78,8 @@ module.exports = function(opts) {
       if (SKIP_RE.test(file.code)) {
         return;
       }
+      logger.setLevel(log);
+      _filename = file.opts.filename;
       _hoistPath = path;
       _hoistedSlug = hoistedSlug;
       _bableBindIdentifer = _hoistPath.scope.generateUidIdentifier(
@@ -83,11 +90,18 @@ module.exports = function(opts) {
         t.stringLiteral(indexModule)
       );
 
-      path.traverse(visitor);
+      const state = {
+        numTransformed: 0,
+      };
+      path.traverse(visitor, state);
 
-      if (_needImport) {
+      if (state.numTransformed > 0) {
         addImport();
-        _needImport = false;
+
+        _totalTransformedInAllFiles += state.numTransformed;
+        logger.debug(
+          `Total inline functions transformed: ${_totalTransformedInAllFiles}`
+        );
       }
     },
   };
@@ -116,49 +130,50 @@ module.exports = function(opts) {
       }
     },
 
-    JSXExpressionContainer(path) {
+    JSXExpressionContainer(path, state) {
       const exprPath = path.get("expression");
       if (t.isIdentifier(exprPath)) {
         const binding = exprPath.scope.getBinding(exprPath.node.name);
         if (!binding) {
           return;
         }
-        processPath(binding.path);
+        processPath(binding.path, state);
 
         // constantViolations are just assignments to the variable after the
         // initial binding. We want to hoist all potential arrow functions that
         // are assigned to the variable.
         for (let i = 0, n = binding.constantViolations.length; i < n; i++) {
-          processPath(binding.constantViolations[i]);
+          processPath(binding.constantViolations[i], state);
         }
       } else {
-        processPath(exprPath);
+        processPath(exprPath, state);
       }
     },
   };
 
-  function processPath(path) {
+  function processPath(path, state) {
     if (t.isVariableDeclarator(path)) {
-      processPath(path.get("init"));
+      processPath(path.get("init"), state);
     } else if (t.isAssignmentExpression(path)) {
-      processPath(path.get("right"));
+      processPath(path.get("right"), state);
     } else if (t.isConditionalExpression(path)) {
-      processPath(path.get("consequent"));
-      processPath(path.get("alternate"));
+      processPath(path.get("consequent"), state);
+      processPath(path.get("alternate"), state);
     } else if (t.isCallExpression(path)) {
-      processCallExpression(path);
+      processCallExpression(path, state);
     } else if (t.isArrowFunctionExpression(path)) {
-      processArrowFunctionExpression(path);
+      processArrowFunctionExpression(path, state);
     }
   }
 
-  function processCallExpression(path) {
+  function processCallExpression(path, rootState) {
     if (
       t.isMemberExpression(path.node.callee) &&
       !path.node.callee.computed &&
       t.isIdentifier(path.node.callee.property, {name: "bind"})
     ) {
-      _needImport = true;
+      rootState.numTransformed++;
+      logger.debug(makeMsg("Transformed call to 'bind'", path));
       path.replaceWith(
         callReflectiveBindExpression(
           path.node.callee.object,
@@ -168,11 +183,14 @@ module.exports = function(opts) {
     }
   }
 
-  function processArrowFunctionExpression(path) {
+  function processArrowFunctionExpression(path, rootState) {
     // Don't hoist if the arrow function is top level (defined in the same
     // scope as the hoist path) since that is where it's going to be hoisted
     // to anyways.
     if (path.parentPath.scope === _hoistPath.scope) {
+      logger.debug(
+        makeMsg("Skipping arrow function defined in the outermost scope", path)
+      );
       return;
     }
 
@@ -189,7 +207,9 @@ module.exports = function(opts) {
     if (!state.canHoist) {
       return;
     }
-    _needImport = true;
+
+    rootState.numTransformed++;
+    logger.debug(makeMsg("Transformed arrow function", path));
 
     // Convert member expressions that start with `this` into arguments and
     // bind them with reflective bind. This makes sure our hoisted function is
@@ -217,7 +237,10 @@ module.exports = function(opts) {
 
   const arrowFnVisitor = {
     Identifier(path, state) {
-      arrowFnIdentifier(path, state);
+      const hoisted = arrowFnIdentifier(path, state);
+      if (hoisted) {
+        validateNestedPropertyAccessInArrowFn(path);
+      }
     },
 
     JSXIdentifier(path, state) {
@@ -232,9 +255,8 @@ module.exports = function(opts) {
       }
 
       // Restrict `this` hoisting to only accesses to `this.(props|state)` and
-      // `this.(props|state).attr`. We don't support hoisting deep attribute
-      // access (e.g. this.props.attr.nested.deepNested becomes
-      // `_temp.nested.deepNested`).
+      // `this.(props|state).value`. We don't support hoisting deep property
+      // access (e.g. this.props.value.nested becomes `_temp.nested`).
       const parentPath = path.parentPath;
       if (
         !parentPath ||
@@ -261,6 +283,8 @@ module.exports = function(opts) {
           ? grandparentPath
           : parentPath;
 
+      validateNestedPropertyAccessInArrowFn(memberExpressionPath);
+
       state.thisUsagePaths.push(memberExpressionPath);
     },
 
@@ -269,17 +293,18 @@ module.exports = function(opts) {
     },
   };
 
+  // Returns true if the identifier needs to be hoisted.
   function arrowFnIdentifier(path, state) {
     // Ideally, we wouldn't need this check, but in babel 6.24.1 path.stop()
     // does not actually stop the entire traversal, only the traversal of the
     // remaining visitor keys of the parent node.
     if (!state.canHoist) {
       path.stop();
-      return;
+      return false;
     }
     const binding = getHoistableBinding(path, state.fnPath.scope);
     if (!binding) {
-      return;
+      return false;
     }
     state.canHoist =
       // Since we have determined that this identifier is bound outside the
@@ -304,12 +329,21 @@ module.exports = function(opts) {
         }));
 
     if (!state.canHoist) {
+      logger.warn(
+        makeMsg(
+          `Cannot transform arrow function because the variable '${path.node
+            .name}' is assigned to after the arrow function definition.`,
+          path
+        )
+      );
       // This line unfortunately only stops traversing the visitor keys of the
       // parent node, but ideally here it would stop the entire arrowFnVisitor
       // traversal.
       path.stop();
+      return false;
     } else {
       state.outerIdentifierNames.add(path.node.name);
+      return true;
     }
   }
 
@@ -606,6 +640,101 @@ module.exports = function(opts) {
       _hoistPath.node.body[0].leadingComments = undefined;
     }
     _hoistPath.unshiftContainer("body", node);
+  }
+
+  /**
+   * TODO: move this blob of text out to the docs and link to it.
+   * 
+   * Checks if the path is part of a nested property access.
+   * This means that it is of the form `pathNode.foo`.
+   * 
+   * We want to encourage developers to manually hoist these nested propery
+   * accesses out to constant variables to reduce wasted re-renders because
+   * we only extract the leftmost object as the argument to the hoisted
+   * function.
+   * 
+   * For example:
+   *   const obj = {...};
+   *   const handleClick = () => this.setState({foo: obj.a.b.c});
+   * 
+   * Is transformed to:
+   *   function _hoisted(obj) {
+   *     this.setState(foo: obj.a.b.c);
+   *   }
+   *   ...
+   *   const obj = {...};
+   *   const handleClick = babelBind(_hoisted, this, obj);
+   * 
+   * In this case, the handleClick function will not be reflectively equal
+   * whenever the `obj` references changes. It is better for the user to
+   * extract the value out to a constant:
+   *   const obj = {...};
+   *   const c = obj.a.b.c;
+   *   const handleClick = () => this.setState({foo: c});
+   * 
+   * This is transformed to:
+   *   function _hoisted(c) {
+   *     this.setState(foo: c);
+   *   }
+   *   ...
+   *   const obj = {...};
+   *   const c = obj.a.b.c;
+   *   const handleClick = babelBind(_hoisted, this, c);
+   * 
+   * Which will be reflectively equal as long as c doesn't change value, even
+   * if the `obj` reference changes.
+   * 
+   * Note that `pathNode.foo()` is ok because pulling `pathNode.foo` out and
+   * calling `foo()` on its own does not result in the right context within
+   * the function.
+   */
+  function validateNestedPropertyAccessInArrowFn(path) {
+    if (
+      path &&
+      path.parentPath &&
+      t.isMemberExpression(path.parentPath.node) &&
+      path.parentPath.parentPath &&
+      !t.isCallExpression(path.parentPath.parentPath.node)
+    ) {
+      const nodeStr = nodeToString(path.parentPath.node);
+      logger.info(
+        makeMsg(
+          `Accessing nested property '${nodeStr}'. Consider pulling the nested property value out to a constant and closing over the constant.`,
+          path
+        )
+      );
+    }
+  }
+
+  function nodeToString(node) {
+    if (!node) {
+      return;
+    }
+    if (t.isNullLiteral(node)) {
+      // Must come before isLiteral
+      return "null";
+    } else if (t.isLiteral(node)) {
+      return node.extra.raw;
+    } else if (t.isIdentifier(node)) {
+      return node.name;
+    } else if (t.isThisExpression(node)) {
+      return "this";
+    } else if (t.isMemberExpression(node)) {
+      const objectStr = nodeToString(node.object);
+      const propertyStr = nodeToString(node.property);
+      return node.computed
+        ? `${objectStr}[${propertyStr}]`
+        : `${objectStr}.${propertyStr}`;
+    } else if (t.isCallExpression(node)) {
+      const argsStr = node.arguments.map(nodeToString).join(", ");
+      return `${nodeToString(node.callee)}(${argsStr})`;
+    }
+    return `__${node.type}__`;
+  }
+
+  function makeMsg(msg, path) {
+    const start = path.node.loc.start;
+    return `${msg} (${_filename} ${start.line}:${start.column})`;
   }
 
   return {visitor: rootVisitor};
