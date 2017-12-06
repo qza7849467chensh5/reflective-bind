@@ -4,12 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.0.4
 * Add "log" option to log general transform info and warnings.
 * Log info about which inline functions are transformed.
 * Log warnings about sub-optimial code and how to fix it.
-
-## 0.0.4-rc2
-
 * Don't transform inline functions on `ref` prop.
 * Don't transform arrow functions defined at the top level.
 * Don't transform `fn[bind](...)`
