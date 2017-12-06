@@ -25,7 +25,7 @@ Add it to the top of your plugin list in `.babelrc` (it must be run before other
 
 ```
 "plugins": [
-  ["reflective-bind/babel", {log: "debug"}],
+  ["reflective-bind/babel", {"log": "debug"}],
   ...
 ]
 ```
