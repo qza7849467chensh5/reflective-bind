@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.1.0
 * Add "propRegex" option to only transform matching prop names.
 
 ## 0.0.4
