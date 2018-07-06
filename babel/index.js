@@ -3,9 +3,8 @@
  * function expressions and arrow functions when possible to remove function
  * copying.
  *
- * Technically we only need to do this for code relevant to React render.
- * However, for completeness and simplicity, we just apply to all places
- * in the code. This can be changed in the future.
+ * We only do this for code relevant to React render to minimize the
+ * processing time and code bloat.
  *
  * Function.prototype.bind:
  *   - Simply replace `expression.bind(...bindArgs)` with
@@ -560,6 +559,8 @@ module.exports = function(opts) {
       return true;
     } else if (t.isIdentifier(node1)) {
       return node1.name === node2.name;
+    } else if (t.isStringLiteral(node1)) {
+      return node1.value === node2.value;
     } else if (t.isMemberExpression(node1)) {
       return (
         node1.computed === node2.computed &&
@@ -567,9 +568,7 @@ module.exports = function(opts) {
         nodesDefinitelyEqual(node1.property, node2.property)
       );
     } else {
-      throw new Error(
-        `Equality comparison not supported for node type "${node1.type}"`
-      );
+      return false;
     }
   }
 

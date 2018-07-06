@@ -77,17 +77,20 @@ exports[`reflective-bind babel transform arrowComputedProperty.jsx 1`] = `
 import { babelBind as _testBind } from \\"../../src\\";
 
 function _testBBHoisted(prop, obj) {
-  return obj.a[prop];
+  return obj[prop].b;
 }
 
 import * as React from \\"react\\";
 
 (function () {
+  // These dummy variables exist to make sure we don't use the wrong variables
+  // when hoisting.
   // eslint-disable-next-line no-unused-vars
   let a = 1;
   // eslint-disable-next-line no-unused-vars
   let b = 2;
-  let prop = \\"b\\";
+
+  let prop = \\"a\\";
 
   const hoistable = _testBind(_testBBHoisted, this, prop);
 
@@ -1102,6 +1105,29 @@ import * as React from \\"react\\";
   // Use in JSXExpressionContainer to enable hoisting
   <React.Component onClick={hoistable} />;
 })();"
+`;
+
+exports[`reflective-bind babel transform duplicateComputedMemberExpressionStringArg.jsx 1`] = `
+"// @flow
+
+import { babelBind as _testBind } from \\"../../src\\";
+
+function _testBBHoisted(_temp) {
+  // There should only be one parameter in the hoisted function
+  _temp;
+  _temp;
+}
+
+import React from \\"react\\";
+
+class MyComponent extends React.Component<{| a: number |}> {
+  render() {
+    const hoistable = _testBind(_testBBHoisted, this, this.props[\\"a\\"]);
+
+    // Use in JSXExpressionContainer to enable hoisting
+    return <React.Component onClick={hoistable} />;
+  }
+}"
 `;
 
 exports[`reflective-bind babel transform flowGenerics.jsx 1`] = `
