@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.2.0
+* Better handling of duplicate hoisted function arguments
+* Publish shallowReflectiveEqual
+
 ## 0.1.0
 * Add "propRegex" option to only transform matching prop names.
 
