@@ -29,7 +29,7 @@ const SNAPSHOT_TRANSFORM_OPTS = {
   parserOpts: {
     plugins: ["flow", "jsx"],
   },
-  plugins: [TARGET_PLUGIN],
+  plugins: [TARGET_PLUGIN, "lodash"],
 };
 
 const VALIDATE_TRANSFORM_OPTS = {
@@ -147,6 +147,7 @@ const EVAL_RESULTS = {
   "fnWithFlow.jsx": 4,
   "ignorePropNameByRegex.jsx": undefined,
   "jsxHtmlLiteral.jsx": undefined,
+  "lodashBabelPlugin.jsx": undefined,
   "mapArrow.jsx": undefined,
   "noTransform.jsx": undefined,
   "reassignIdentifier.jsx": undefined,
