@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.2.1
+* Fix hanging identifiers when applying the lodash babel plugin after this plugin
+
 ## 0.2.0
 * Better handling of duplicate hoisted function arguments
 * Publish shallowReflectiveEqual
