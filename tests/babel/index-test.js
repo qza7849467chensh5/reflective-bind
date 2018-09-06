@@ -32,10 +32,50 @@ const SNAPSHOT_TRANSFORM_OPTS = {
   plugins: [TARGET_PLUGIN, "lodash"],
 };
 
+const CUSTOM_SNAPSHOT_OPTS = {
+  "ignorePropNameByRegex.jsx": {
+    ...SNAPSHOT_TRANSFORM_OPTS,
+    plugins: [
+      [
+        plugin,
+        {
+          ...PLUGIN_OPTS,
+          propRegex: "^on[A-Z].*$",
+        },
+      ],
+    ],
+  },
+  "babel7Regression.jsx": {
+    babelrc: false,
+    parserOpts: {
+      plugins: ["flow", "jsx"],
+    },
+    presets: ["@babel/preset-env"],
+    plugins: [TARGET_PLUGIN],
+  },
+};
+
 const VALIDATE_TRANSFORM_OPTS = {
   babelrc: false,
-  presets: ["env", "react", "stage-2"],
-  plugins: [TARGET_PLUGIN, "transform-flow-comments"],
+  presets: ["@babel/preset-env", "@babel/preset-flow", "@babel/preset-react"],
+  plugins: [
+    TARGET_PLUGIN,
+    "@babel/plugin-transform-flow-comments",
+    "@babel/plugin-syntax-dynamic-import",
+    "@babel/plugin-syntax-import-meta",
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-json-strings",
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        legacy: true,
+      },
+    ],
+    "@babel/plugin-proposal-function-sent",
+    "@babel/plugin-proposal-export-namespace-from",
+    "@babel/plugin-proposal-numeric-separator",
+    "@babel/plugin-proposal-throw-expressions",
+  ],
 };
 
 const NESTED_PROPERTY_RE = /^Accessing nested property.*/;
@@ -123,6 +163,7 @@ const EVAL_RESULTS = {
   "arrowThisState.jsx": undefined,
   "arrowTopLevel.jsx": undefined,
   "arrowWithFlow.jsx": 10,
+  "babel7Regression.jsx": undefined,
   "bindComputed.jsx": undefined,
   "bindFlow.jsx": 3,
   "bindInlineJsxContainerElement.jsx": undefined,
@@ -156,21 +197,6 @@ const EVAL_RESULTS = {
   "renameIdentifier.jsx": undefined,
   "ternaryExpression.jsx": undefined,
   "ternaryExpressionInline.jsx": undefined,
-};
-
-const CUSTOM_SNAPSHOT_OPTS = {
-  "ignorePropNameByRegex.jsx": {
-    ...SNAPSHOT_TRANSFORM_OPTS,
-    plugins: [
-      [
-        plugin,
-        {
-          ...PLUGIN_OPTS,
-          propRegex: "^on[A-Z].*$",
-        },
-      ],
-    ],
-  },
 };
 
 function validateResult(filename: string, code: string) {
