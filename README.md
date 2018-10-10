@@ -43,18 +43,17 @@ class MyComponent extends React.Component {
 }
 ```
 
-If you’re already using `React.PureComponent` and want to avoid updating all of your components, consider monkey patching `shouldComponentUpdate` 🙊
+Alternatively, subclass `React.Component` and override `shouldComponentUpdate`. Then extend your custom component when you want a pure component.
 
 ```js
-import React from "react";
+import * as React from "react";
 import {shouldComponentUpdate} from "reflective-bind";
 
-React.PureComponent.prototype.shouldComponentUpdate = function(
-  nextProps,
-  nextState
-) {
-  return shouldComponentUpdate(this, nextProps, nextState);
-};
+export default class CustomPureComponent extends React.Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    return shouldComponentUpdate(this, nextProps, nextState);
+  }
+}
 ```
 
 If you do not want the babel plugin to process a specific file, add the following line to your file:
