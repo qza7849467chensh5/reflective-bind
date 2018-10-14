@@ -130,37 +130,36 @@ module.exports = function(opts) {
       }
     },
 
-    JSXAttribute(path) {
+    JSXAttribute(path, state) {
       if (
         t.isJSXIdentifier(path.node.name) &&
-        shouldSkipProp(path.node.name.name)
+        !shouldSkipPropName(path.node.name.name) &&
+        t.isJSXExpressionContainer(path.node.value)
       ) {
-        path.skip();
-      }
-    },
+        const exprPath = path.get("value.expression");
+        if (t.isIdentifier(exprPath)) {
+          const binding = exprPath.scope.getBinding(exprPath.node.name);
+          if (!binding) {
+            return;
+          }
+          processPath(binding.path, state);
 
-    JSXExpressionContainer(path, state) {
-      const exprPath = path.get("expression");
-      if (t.isIdentifier(exprPath)) {
-        const binding = exprPath.scope.getBinding(exprPath.node.name);
-        if (!binding) {
-          return;
-        }
-        processPath(binding.path, state);
-
-        // constantViolations are just assignments to the variable after the
-        // initial binding. We want to hoist all potential arrow functions that
-        // are assigned to the variable.
-        for (let i = 0, n = binding.constantViolations.length; i < n; i++) {
-          processPath(binding.constantViolations[i], state);
+          // constantViolations are just assignments to the variable after the
+          // initial binding. We want to hoist all potential arrow functions that
+          // are assigned to the variable.
+          for (let i = 0, n = binding.constantViolations.length; i < n; i++) {
+            processPath(binding.constantViolations[i], state);
+          }
+        } else {
+          processPath(exprPath, state);
         }
       } else {
-        processPath(exprPath, state);
+        path.skip();
       }
     },
   };
 
-  function shouldSkipProp(name) {
+  function shouldSkipPropName(name) {
     return (
       name === "ref" || (_propRegexCompiled && !_propRegexCompiled.test(name))
     );

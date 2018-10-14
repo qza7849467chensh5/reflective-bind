@@ -63,6 +63,20 @@ import * as React from \\"react\\";
 })();"
 `;
 
+exports[`reflective-bind babel transform arrowChildrenProp.jsx 1`] = `
+"// @flow
+import * as React from \\"react\\";
+
+(function () {
+  const shouldNotHoist = (a, b) => {
+    return a + b;
+  }; // Use in JSXExpressionContainer to enable hoisting
+
+
+  <React.Component>{shouldNotHoist}</React.Component>;
+})();"
+`;
+
 exports[`reflective-bind babel transform arrowComputedProperty.jsx 1`] = `
 "import { babelBind as _testBind } from \\"../../src\\";
 

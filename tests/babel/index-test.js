@@ -131,6 +131,7 @@ const EVAL_RESULTS = {
   "alreadyImported.jsx": 1,
   "alreadyRequired.jsx": 1,
   "arrowBind.jsx": 6,
+  "arrowChildrenProp.jsx": undefined,
   "arrowComputedProperty.jsx": 10,
   "arrowContext.jsx": 1,
   "arrowDeclareFnAfterFn.jsx": undefined,
