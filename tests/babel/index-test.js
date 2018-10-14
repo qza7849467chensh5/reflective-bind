@@ -114,9 +114,7 @@ describe("reflective-bind babel transform", () => {
 const NESTED_PROPERTY_COUNTS = {
   "arrowComputedProperty.jsx": 1,
   "arrowStatelessComponentProps.jsx": 1,
-  "arrowThisCallExpression.jsx": 1,
-  "arrowThisProps.jsx": 1,
-  "arrowThisState.jsx": 1,
+  "arrowThis.jsx": 0,
 };
 
 function validateNestedPropertyLogs(filename) {
@@ -158,9 +156,6 @@ const EVAL_RESULTS = {
   "arrowSimple.jsx": 10,
   "arrowStatelessComponentProps.jsx": undefined,
   "arrowThis.jsx": undefined,
-  "arrowThisCallExpression.jsx": undefined,
-  "arrowThisProps.jsx": undefined,
-  "arrowThisState.jsx": undefined,
   "arrowTopLevel.jsx": undefined,
   "arrowWithFlow.jsx": 10,
   "babel7Regression.jsx": undefined,
@@ -171,7 +166,6 @@ const EVAL_RESULTS = {
   "bindSimple.jsx": 3,
   "bindingNodeLocNPE.jsx": undefined,
   "classReference.jsx": undefined,
-  "duplicateComputedMemberExpressionStringArg.jsx": undefined,
   "flowGenerics.jsx": 6,
   "flowObjMap.jsx": undefined,
   "fnAsync.jsx": undefined,
