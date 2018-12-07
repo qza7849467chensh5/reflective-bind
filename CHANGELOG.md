@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.2.3
+* Don't hoist handle non-computed object property identifiers
+
 ## 0.2.2
 * Upgrade to babel 7
 * Fix hanging `babelBind` identifier from babel 7 upgrade (https://github.com/flexport/reflective-bind/issues/26)
