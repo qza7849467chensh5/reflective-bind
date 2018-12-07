@@ -1,6 +1,6 @@
 {
   "name": "reflective-bind",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Eliminate wasteful re-rendering in React components caused by inline functions",
   "author": "Dounan Shi",
   "license": "MIT",
