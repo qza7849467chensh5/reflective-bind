@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.2.4
+* Bump js-yaml from 3.10.0 to 3.14.0
+* Bump handlebars from 4.0.12 to 4.7.6
+* Bump sshpk from 1.13.1 to 1.16.1
+* Bump diff from 3.4.0 to 3.5.0
+* Bump lodash from 4.17.4 to 4.17.19
+* Bump mixin-deep from 1.3.1 to 1.3.2
+* Bump merge from 1.2.0 to 1.2.1
+
 ## 0.2.3
 * Don't hoist handle non-computed object property identifiers
 
